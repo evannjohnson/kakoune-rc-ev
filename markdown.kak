@@ -79,7 +79,12 @@ add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n={2,}\h*\n\h*
 add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
 
 # Atx-style header
-add-highlighter shared/markdown/inline/text/ regex ^#[^\n]* 0:header
+add-highlighter shared/markdown/inline/text/ regex "^#[^\n]*" 0:header
+add-highlighter shared/markdown/inline/text/ regex "^#{2}[^\n]*" 0:header2
+add-highlighter shared/markdown/inline/text/ regex "^#{3}[^\n]*" 0:header3
+add-highlighter shared/markdown/inline/text/ regex "^#{4}[^\n]*" 0:header4
+add-highlighter shared/markdown/inline/text/ regex "^#{5}[^\n]*" 0:header5
+add-highlighter shared/markdown/inline/text/ regex "^#{6}[^\n]*" 0:header6
 
 add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:+i
 add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:+i
