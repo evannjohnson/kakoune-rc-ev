@@ -91,7 +91,8 @@ add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^
 add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:bold
 add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:bold
 add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
-add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
+# highlight 2 more spaces at EOL, which most markdown programs treat as a linebreak
+add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:trailingWhitespace
 
 # Commands
 # ‾‾‾‾‾‾‾‾
