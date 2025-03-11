@@ -103,11 +103,18 @@ define-command markdown-load-languages -params 1 %{
         evaluate-commands -itersel %{ try %{
             require-module %val{selection}
             add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
-            add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
-            add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+            # add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
+            add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill codeblockBounds
+            add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) group
+            add-highlighter "shared/markdown/codeblock/%val{selection}/inner/" ref %val{selection}
+            add-highlighter "shared/markdown/codeblock/%val{selection}/inner/" fill codeblockBackground
+
             add-highlighter "shared/markdown/listblock/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
-            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill meta
-            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+            # add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill meta
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill codeblockBounds
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) group
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner/" ref %val{selection}
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner/" fill codeblockBackground
         }}
     }}
 }
