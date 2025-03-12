@@ -966,6 +966,10 @@ define-command -params 1.. \
     fi
   } \
   git-async %{ nop %sh{ {
+    run_in_client () {
+        printf "eval -client '%s' '%s'" "$kak_client" "$1" | kak -p "${kak_session}"
+    }
+
     cd_bufdir() {
         dirname_buffer="${kak_buffile%/*}"
         cd "${dirname_buffer}" 2>/dev/null || {
@@ -978,12 +982,13 @@ define-command -params 1.. \
         rev=$1 # empty means index
         shift
         buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
-        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-            set-register | %{ cat >${kak_response_fifo} }
-            execute-keys -draft %{%<a-|><ret>}
-        }"
+        # echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+        #     set-register | %{ cat >${kak_response_fifo} }
+        #     execute-keys -draft %{%<a-|><ret>}
+        # }"
+        run_in_client 'exec -draft "%%<a-|>tee > /tmp/kak-buffer<ret>"'
         git show "$rev:${buffile_relative}" |
-            diff - ${kak_response_fifo} "$@" |
+            diff - "/tmp/kak-buffer" "$@" |
             awk -v buffile_relative="$buffile_relative" '
                 NR == 1 { print "--- a/" buffile_relative }
                 NR == 2 { print "+++ b/" buffile_relative }
