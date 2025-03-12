@@ -981,19 +981,27 @@ define-command -params 1.. \
     diff_buffer_against_rev() {
         rev=$1 # empty means index
         shift
+
         buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
-        # echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-        #     set-register | %{ cat >${kak_response_fifo} }
-        #     execute-keys -draft %{%<a-|><ret>}
-        # }"
-        run_in_client 'exec -draft "%%<a-|>tee > /tmp/kak-buffer<ret>"'
+        # fifo="/tmp/kak-buffer-fifo-$kak_client_pid"
+
+        # # Ensure FIFO exists
+        # [ -p "$fifo" ] || mkfifo "$fifo"
+
+        fifo=$(mktemp -u /tmp/kak-buffer-fifo-XXXXXX)
+        mkfifo "$fifo"
+
+        run_in_client 'exec -draft "%%<a-|>tee > '"$fifo"'<ret>"'
+
         git show "$rev:${buffile_relative}" |
-            diff - "/tmp/kak-buffer" "$@" |
+            diff - "$fifo" "$@" |
             awk -v buffile_relative="$buffile_relative" '
                 NR == 1 { print "--- a/" buffile_relative }
                 NR == 2 { print "+++ b/" buffile_relative }
                 NR > 2
             '
+
+        rm -f "$fifo"
     }
 
     update_diff() {
