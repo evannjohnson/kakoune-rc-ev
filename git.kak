@@ -965,7 +965,7 @@ define-command -params 1.. \
         ;
     fi
   } \
-  git-async %{ nop %sh{
+  git-async %{ nop %sh{ {
     cd_bufdir() {
         dirname_buffer="${kak_buffile%/*}"
         cd "${dirname_buffer}" 2>/dev/null || {
@@ -1051,6 +1051,7 @@ define-command -params 1.. \
         ' )
     }
 
-    printf "eval -client '$kak_client' '%s'" "`update_diff`" | kak -p ${kak_session} }
-}
+    printf "eval -client '$kak_client' '%s'" "`update_diff`" | kak -p ${kak_session}
+    } > /dev/null 2>/tmp/stderr.log & }
+  }
 
