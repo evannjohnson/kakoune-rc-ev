@@ -1065,6 +1065,6 @@ define-command -params 1.. \
     }
 
     printf "eval -client '$kak_client' '%s'" "`update_diff`" | kak -p ${kak_session}
-    } > /dev/null 2>/tmp/stderr.log & }
+    } > /dev/null 2>&1 < /dev/null & }
   }
 
