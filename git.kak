@@ -207,6 +207,35 @@ define-command -params 1.. \
             '
     }
 
+    diff_buffer_against_rev_test() {
+        rev=$1 # empty means index
+        shift
+        buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
+        git_version_file="/tmp/kakoune_git_version_$$"
+        buffer_version_file="/tmp/kakoune_buffer_version_$$"
+        
+        # Save git version to a file
+        git show "$rev:${buffile_relative}" > "$git_version_file"
+        
+        # Get buffer content
+        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+            set-register | %{ cat >${kak_response_fifo} }
+            execute-keys -draft %{%<a-|><ret>}
+        }"
+        cat ${kak_response_fifo} > "$buffer_version_file"
+        
+        # Use git diff directly on the two files
+        git diff --no-index -U0 "$git_version_file" "$buffer_version_file" |
+            awk -v buffile_relative="$buffile_relative" '
+                NR == 1 { print "--- a/" buffile_relative }
+                NR == 2 { print "+++ b/" buffile_relative }
+                NR > 2
+            '
+        
+        # Clean up
+        rm -f "$git_version_file" "$buffer_version_file"
+    }
+
     blame_toggle() {
         echo >${kak_command_fifo} "try %{
             add-highlighter window/git-blame flag-lines Information git_blame_flags
@@ -976,10 +1005,32 @@ define-command -params 1.. \
         rm -f "$fifo"
     }
 
+    diff_buffer_against_index() {
+        buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
+
+        fifo_buffer=$(mktemp -u /tmp/kak-diff-fifo-XXXXXX)
+        mkfifo "$fifo_buffer"
+        fifo_git=$(mktemp -u /tmp/kak-diff-fifo-XXXXXX)
+        mkfifo "$fifo_git"
+
+        eval_in_client 'exec -draft "%%<a-|>tee > '"$fifo_buffer"'<ret>"'
+        git show "$rev:${buffile_relative}" > "$fifo_git" &
+
+        git diff --no-index -U0 "$fifo_git" "$fifo_buffer" |
+            awk -v buffile_relative="$buffile_relative" '
+                NR == 1 { print "--- a/" buffile_relative }
+                NR == 2 { print "+++ b/" buffile_relative }
+                NR > 2
+            '
+
+        rm -f "$fifo_buffer"
+        rm -f "$fifo_git"
+    }
+
     update_diff() {
         (
             cd_bufdir
-            diff_buffer_against_rev "" -U0 | perl -e '
+            diff_buffer_against_index | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
             $add_char = $ENV{"kak_opt_git_diff_add_char"};
