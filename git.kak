@@ -1016,7 +1016,7 @@ define-command -params 1.. \
         eval_in_client 'exec -draft "%%<a-|>tee > '"$fifo_buffer"'<ret>"'
         git show "$rev:${buffile_relative}" > "$fifo_git" &
 
-        git diff --no-index -U0 "$fifo_git" "$fifo_buffer" |
+        git diff --no-index "$@" -- "$fifo_git" "$fifo_buffer" |
             awk -v buffile_relative="$buffile_relative" '
                 NR == 1 { print "--- a/" buffile_relative }
                 NR == 2 { print "+++ b/" buffile_relative }
@@ -1030,7 +1030,7 @@ define-command -params 1.. \
     update_diff() {
         (
             cd_bufdir
-            diff_buffer_against_index | perl -e '
+            diff_buffer_against_index -U0 | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
             $add_char = $ENV{"kak_opt_git_diff_add_char"};
