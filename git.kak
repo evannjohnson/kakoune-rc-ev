@@ -931,42 +931,18 @@ define-command git-diff-goto-source \
 
 define-command -params 1.. \
     -docstring %{
-        git [<arguments>]: git wrapping helper
-        All the optional arguments are forwarded to the git utility
+        git [<arguments>]: asynchronous git helper
         Available commands:
-            add
-            apply      - run "patch git apply [<arguments>]"; if buffile is
-                         tracked, use the changes to selected lines instead
-            blame      - toggle blame annotations
-            blame-jump - show the commit that added the line at cursor
-            checkout
-            commit
-            diff
-            edit
-            grep
-            hide-diff
-            init
-            log
-            next-hunk
-            prev-hunk
-            reset
-            rm
-            show
-            show-branch
-            show-diff
-            status
             update-diff
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf %s\\n \
-            hide-diff \
-            show-diff \
             update-diff \
         ;
     fi
   } \
   git-async %{ nop %sh{ {
-    run_in_client () {
+    eval_in_client () {
         printf "eval -client '%s' '%s'" "$kak_client" "$1" | kak -p "${kak_session}"
     }
 
@@ -983,15 +959,11 @@ define-command -params 1.. \
         shift
 
         buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
-        # fifo="/tmp/kak-buffer-fifo-$kak_client_pid"
-
-        # # Ensure FIFO exists
-        # [ -p "$fifo" ] || mkfifo "$fifo"
 
         fifo=$(mktemp -u /tmp/kak-buffer-fifo-XXXXXX)
         mkfifo "$fifo"
 
-        run_in_client 'exec -draft "%%<a-|>tee > '"$fifo"'<ret>"'
+        eval_in_client 'exec -draft "%%<a-|>tee > '"$fifo"'<ret>"'
 
         git show "$rev:${buffile_relative}" |
             diff - "$fifo" "$@" |
@@ -1064,7 +1036,12 @@ define-command -params 1.. \
         ' )
     }
 
-    printf "eval -client '$kak_client' '%s'" "`update_diff`" | kak -p ${kak_session}
+    case "$1" in
+    update-diff) eval_in_client "$(update_diff)" ;;
+    *)
+        printf "fail unknown git command '%s'\n" "$1"
+        exit
+        ;;
+    esac
     } > /dev/null 2>&1 < /dev/null & }
-  }
-
+}
